@@ -3,17 +3,24 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { tmpdir } from 'os';
 
-// Create a unique test directory for each test run
-const TEST_HOME = path.join(tmpdir(), `twitter-cli-config-test-${Date.now()}`);
-const TEST_CONFIG_DIR = path.join(TEST_HOME, '.twitter-cli');
-const TEST_CONFIG_FILE = path.join(TEST_CONFIG_DIR, 'config.json');
+// Get test paths
+function getTestPaths() {
+  const testHome = path.join(tmpdir(), 'twitter-cli-config-test-' + process.pid);
+  const testConfigDir = path.join(testHome, '.twitter-cli');
+  const testConfigFile = path.join(testConfigDir, 'config.json');
+  return { testHome, testConfigDir, testConfigFile };
+}
+
+const paths = getTestPaths();
 
 // Mock os.homedir to return our test directory
 vi.mock('os', async () => {
-  const actual = await vi.importActual('os');
+  const actual = await vi.importActual('os') as object;
+  const p = await import('path');
+  const { tmpdir } = actual as { tmpdir: () => string };
   return {
     ...actual,
-    homedir: () => TEST_HOME,
+    homedir: () => p.join(tmpdir(), 'twitter-cli-config-test-' + process.pid),
   };
 });
 
@@ -34,8 +41,8 @@ import {
 describe('config', () => {
   beforeEach(() => {
     // Clean up any existing test directory
-    if (fs.existsSync(TEST_HOME)) {
-      fs.rmSync(TEST_HOME, { recursive: true });
+    if (fs.existsSync(paths.testHome)) {
+      fs.rmSync(paths.testHome, { recursive: true });
     }
     // Clear environment variable
     delete process.env.TWITTER_BEARER_TOKEN;
@@ -43,21 +50,21 @@ describe('config', () => {
 
   afterEach(() => {
     // Clean up test directory
-    if (fs.existsSync(TEST_HOME)) {
-      fs.rmSync(TEST_HOME, { recursive: true });
+    if (fs.existsSync(paths.testHome)) {
+      fs.rmSync(paths.testHome, { recursive: true });
     }
     delete process.env.TWITTER_BEARER_TOKEN;
   });
 
   describe('ensureConfigDir', () => {
     it('should create config directory if it does not exist', () => {
-      expect(fs.existsSync(TEST_CONFIG_DIR)).toBe(false);
+      expect(fs.existsSync(paths.testConfigDir)).toBe(false);
       ensureConfigDir();
-      expect(fs.existsSync(TEST_CONFIG_DIR)).toBe(true);
+      expect(fs.existsSync(paths.testConfigDir)).toBe(true);
     });
 
     it('should not fail if directory already exists', () => {
-      fs.mkdirSync(TEST_CONFIG_DIR, { recursive: true });
+      fs.mkdirSync(paths.testConfigDir, { recursive: true });
       expect(() => ensureConfigDir()).not.toThrow();
     });
   });
@@ -65,14 +72,14 @@ describe('config', () => {
   describe('getConfigPath', () => {
     it('should return path to config file', () => {
       const configPath = getConfigPath();
-      expect(configPath).toBe(TEST_CONFIG_FILE);
+      expect(configPath).toBe(paths.testConfigFile);
     });
   });
 
   describe('getConfigDir', () => {
     it('should return config directory path', () => {
       const configDir = getConfigDir();
-      expect(configDir).toBe(TEST_CONFIG_DIR);
+      expect(configDir).toBe(paths.testConfigDir);
     });
   });
 
@@ -86,9 +93,9 @@ describe('config', () => {
     });
 
     it('should load existing config and merge with defaults', () => {
-      fs.mkdirSync(TEST_CONFIG_DIR, { recursive: true });
+      fs.mkdirSync(paths.testConfigDir, { recursive: true });
       fs.writeFileSync(
-        TEST_CONFIG_FILE,
+        paths.testConfigFile,
         JSON.stringify({ bearerToken: 'test-token', defaultLimit: 20 })
       );
 
@@ -100,8 +107,8 @@ describe('config', () => {
     });
 
     it('should return default config for invalid JSON', () => {
-      fs.mkdirSync(TEST_CONFIG_DIR, { recursive: true });
-      fs.writeFileSync(TEST_CONFIG_FILE, 'invalid json {{{');
+      fs.mkdirSync(paths.testConfigDir, { recursive: true });
+      fs.writeFileSync(paths.testConfigFile, 'invalid json {{{');
 
       const config = loadConfig();
       expect(config.cacheEnabled).toBe(true);
@@ -113,21 +120,21 @@ describe('config', () => {
       const config = { bearerToken: 'test', defaultLimit: 15 };
       saveConfig(config);
 
-      const content = fs.readFileSync(TEST_CONFIG_FILE, 'utf-8');
+      const content = fs.readFileSync(paths.testConfigFile, 'utf-8');
       const parsed = JSON.parse(content);
       expect(parsed.bearerToken).toBe('test');
       expect(parsed.defaultLimit).toBe(15);
     });
 
     it('should create config directory if needed', () => {
-      expect(fs.existsSync(TEST_CONFIG_DIR)).toBe(false);
+      expect(fs.existsSync(paths.testConfigDir)).toBe(false);
       saveConfig({ bearerToken: 'test' });
-      expect(fs.existsSync(TEST_CONFIG_DIR)).toBe(true);
+      expect(fs.existsSync(paths.testConfigDir)).toBe(true);
     });
 
     it('should pretty print JSON with 2-space indent', () => {
       saveConfig({ bearerToken: 'test', defaultLimit: 10 });
-      const content = fs.readFileSync(TEST_CONFIG_FILE, 'utf-8');
+      const content = fs.readFileSync(paths.testConfigFile, 'utf-8');
       expect(content).toContain('\n  '); // Indented
     });
   });
