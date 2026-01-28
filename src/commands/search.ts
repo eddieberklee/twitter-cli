@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { searchTweets, isDemoMode } from '../lib/api.js';
-import { formatTweets, printError, printInfo, printDemoBanner } from '../lib/formatter.js';
+import { formatTweets, printError, printInfo, printDemoBanner } from '../lib/format.js';
 import { SearchOptions, OutputOptions } from '../types/index.js';
 export function createSearchCommand(): Command {
   return new Command('search').description('Search for tweets').argument('<query>', 'Search query')

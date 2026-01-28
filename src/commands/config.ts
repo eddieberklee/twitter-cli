@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import * as readline from 'readline';
-import { loadConfig, saveConfig, getConfigPath, isConfigured } from '../lib/config';
-import { printSuccess, printError, printInfo, printWarning } from '../lib/formatter';
+import { loadConfig, saveConfig, getConfigPath, isConfigured } from '../lib/config.js';
+import { printSuccess, printError, printInfo, printWarning } from '../lib/format.js';
 function prompt(q: string): Promise<string> { const rl = readline.createInterface({ input: process.stdin, output: process.stdout }); return new Promise(r => rl.question(q, a => { rl.close(); r(a.trim()); })); }
 export function createConfigCommand(): Command {
   const cmd = new Command('config').description('Manage config').action(() => {
@@ -33,4 +33,30 @@ export function createConfigCommand(): Command {
     console.log('');
   });
   return cmd;
+}
+
+export function createCacheCommand(): Command {
+  const cmd = new Command('cache').description('Manage cache').action(() => {
+    const c = loadConfig();
+    console.log('\n📦 Cache Status\n');
+    console.log(`   Enabled: ${c.cacheEnabled !== false ? 'yes' : 'no'}`);
+    console.log(`   TTL: ${c.cacheTtlMinutes || 15} minutes`);
+    console.log('\nUse: twitter-cli cache clear\n');
+  });
+  cmd.command('clear').description('Clear cache').action(() => {
+    const { clearCache } = require('../lib/cache.js');
+    clearCache();
+    printSuccess('Cache cleared');
+  });
+  return cmd;
+}
+
+export function createRateLimitCommand(): Command {
+  return new Command('rate-limit').description('Show rate limits').action(() => {
+    console.log('\n📊 Twitter API Rate Limits\n');
+    console.log('   Search: 180 req / 15 min');
+    console.log('   User tweets: 900 req / 15 min');
+    console.log('   User lookup: 900 req / 15 min');
+    console.log('\nRate limit info shown after API calls.\n');
+  });
 }

@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { getReplies, isDemoMode } from '../lib/api.js';
-import { formatTweets, printError, printInfo, printDemoBanner } from '../lib/formatter.js';
+import { formatTweets, printError, printInfo, printDemoBanner } from '../lib/format.js';
 import { OutputOptions } from '../types/index.js';
 export function createRepliesCommand(): Command {
   return new Command('replies').description('Get top replies').argument('<tweet_id>', 'Tweet ID')

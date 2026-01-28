@@ -1,7 +1,7 @@
 import { Command } from 'commander';
-import { getUserTweets, isDemoMode } from '../lib/api';
-import { formatTweets, printError, printInfo, printDemoBanner } from '../lib/formatter';
-import { OutputOptions } from '../types';
+import { getUserTweets, isDemoMode } from '../lib/api.js';
+import { formatTweets, printError, printInfo, printDemoBanner } from '../lib/format.js';
+import { OutputOptions } from '../types/index.js';
 export function createUserCommand(): Command {
   return new Command('user').description("Get user's tweets").argument('<username>', 'Username')
     .option('-n, --limit <n>', 'Limit').option('--json', 'JSON').option('--csv', 'CSV').option('-q, --quiet', 'URLs only').option('--no-color', 'No colors')
