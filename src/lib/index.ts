@@ -7,3 +7,4 @@ export * from './cache.js';
 export * from './config.js';
 export * from './format.js';
 export * from './mock-data.js';
+export * from './twitter.js';

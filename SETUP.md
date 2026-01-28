@@ -1,185 +1,268 @@
-# Setup Guide
+# Twitter CLI Setup Guide
 
-Get your Twitter CLI up and running in 5 minutes.
+This guide walks you through setting up your Twitter API credentials for the Twitter CLI.
 
-## Prerequisites
+## Quick Start
 
-- **Node.js 18+** - [Download here](https://nodejs.org/)
-- **npm** - Comes with Node.js
-- **Twitter Developer Account** - Free tier works fine
-
-## Step 1: Install the CLI
+The fastest way to get started:
 
 ```bash
-# Clone the repository
-git clone https://github.com/eddieberklee/twitter-cli
-cd twitter-cli
-
-# Install dependencies
-npm install
-
-# Link globally so you can run `twitter-cli` anywhere
-npm link
+twitter-cli setup
 ```
 
-Verify installation:
-```bash
-twitter-cli --version
-# Should output: 1.0.0
-```
+This interactive wizard will:
+1. Open the Twitter Developer Portal in your browser
+2. Guide you through getting a Bearer Token
+3. Validate your token
+4. Save the configuration
 
-## Step 2: Get Twitter API Access
+## Getting a Twitter Bearer Token
 
-### Create a Developer Account
+### Step 1: Create a Developer Account
 
-1. Go to [developer.twitter.com](https://developer.twitter.com/en/portal/dashboard)
+1. Go to [Twitter Developer Portal](https://developer.twitter.com/en/portal/projects-and-apps)
 2. Sign in with your Twitter account
-3. Apply for a developer account (if you don't have one)
-   - Select "Hobbyist" → "Exploring the API"
-   - Fill out the form (a few sentences about your use case is fine)
-   - Approval is usually instant for personal use
+3. If you don't have a developer account, apply for one
+   - Select "Hobbyist" or appropriate use case
+   - Fill in the required information
+   - Agree to the Developer Agreement
 
-### Create a Project and App
+### Step 2: Create a Project and App
 
-1. Once approved, go to the [Developer Portal](https://developer.twitter.com/en/portal/dashboard)
-2. Click **"Create Project"**
-   - Name: `twitter-cli` (or anything you like)
-   - Use case: Select appropriate option
-   - Description: "Personal CLI tool for searching tweets"
-3. Click **"Create App"** within the project
-   - App name: `twitter-cli-app`
+1. Click **"+ Create Project"** in the sidebar
+2. Name your project (e.g., "Twitter CLI")
+3. Select a use case (e.g., "Learning/Student" or "Building tools for Twitter users")
+4. Give your project a description
+5. Create an **App** within the project
+   - Name it something memorable (e.g., "twitter-cli-local")
 
-### Get Your Bearer Token
+### Step 3: Get Your Bearer Token
 
-1. In your app settings, go to **"Keys and tokens"**
-2. Find **"Bearer Token"** under "Authentication Tokens"
-3. Click **"Generate"** (or "Regenerate" if one exists)
-4. **Copy the token** - you'll only see it once!
+1. In your App settings, go to **"Keys and Tokens"** tab
+2. Scroll to **"Authentication Tokens"** section
+3. Click **"Generate"** next to Bearer Token
+4. **Copy the token immediately** - you won't be able to see it again!
 
-> ⚠️ **Keep your token secret!** Don't commit it to git or share it publicly.
+> ⚠️ **Important**: Bearer tokens are long strings, typically starting with `AAAA...`. Make sure you copy the entire token.
 
-## Step 3: Configure the CLI
+### Step 4: Configure Twitter CLI
 
-### Option A: Interactive Setup (Recommended)
+Use one of these methods:
 
+#### Option A: Setup Wizard (Recommended)
 ```bash
-twitter-cli config init
+twitter-cli setup
 ```
 
-Follow the prompts to enter your Bearer Token.
-
-### Option B: Direct Configuration
-
+#### Option B: Direct Configuration
 ```bash
-twitter-cli config set TWITTER_BEARER_TOKEN "AAAAAAAAAAAAAAAAAAAAAxxxxxx..."
+twitter-cli config set bearerToken "YOUR_TOKEN_HERE" --validate
 ```
 
-### Option C: Environment Variable
-
+#### Option C: Environment Variable
 ```bash
-export TWITTER_BEARER_TOKEN="AAAAAAAAAAAAAAAAAAAAAxxxxxx..."
+export TWITTER_BEARER_TOKEN="YOUR_TOKEN_HERE"
 ```
 
-Add this to your `~/.bashrc` or `~/.zshrc` to make it permanent.
+Add to your shell profile (`.bashrc`, `.zshrc`, etc.) to persist.
 
-## Step 4: Verify Your Setup
+## Authentication Methods
 
-Test with a real search:
+Twitter CLI supports three ways to authenticate, checked in this order:
+
+| Method | Precedence | Best For |
+|--------|------------|----------|
+| `TWITTER_BEARER_TOKEN` env var | 1 (highest) | CI/CD, Docker, scripting |
+| Config file (`~/.twitter-cli/config.json`) | 2 | Personal use, development |
+| None (demo mode) | 3 | Quick testing with sample data |
+
+### Environment Variable
+
+Best for CI/CD pipelines and containerized environments:
 
 ```bash
+# Linux/macOS
+export TWITTER_BEARER_TOKEN="your-token-here"
+
+# Windows (PowerShell)
+$env:TWITTER_BEARER_TOKEN = "your-token-here"
+
+# Docker
+docker run -e TWITTER_BEARER_TOKEN="your-token" twitter-cli search "query"
+
+# GitHub Actions
+env:
+  TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+```
+
+### Config File
+
+Located at `~/.twitter-cli/config.json`:
+
+```json
+{
+  "bearerToken": "your-token-here",
+  "cacheEnabled": true,
+  "cacheTtlMinutes": 15,
+  "defaultLimit": 10
+}
+```
+
+## Verifying Your Setup
+
+```bash
+# Check current configuration
+twitter-cli config
+
+# Validate your token
+twitter-cli config validate
+
+# Test with a search
 twitter-cli search "hello world" --limit 3
 ```
 
-If configured correctly, you'll see real tweets! 🎉
+## Common Errors
 
-If you see **"DEMO MODE"** banner, your token isn't configured properly.
+### "Invalid or expired token"
 
-## Configuration File Location
+**Cause**: Your bearer token is incorrect or has expired.
 
-Your config is stored at:
+**Fix**:
+1. Go to [Twitter Developer Portal](https://developer.twitter.com/en/portal/projects-and-apps)
+2. Regenerate your Bearer Token
+3. Run `twitter-cli setup` again
+
+### "Access forbidden"
+
+**Cause**: Your app doesn't have the necessary permissions.
+
+**Fix**:
+1. Check your app's access level in the Developer Portal
+2. Ensure you have at least "Read" permissions
+3. Some queries require "Elevated" access
+
+### "Rate limit exceeded"
+
+**Cause**: You've made too many API requests.
+
+**Fix**:
+- Wait for the rate limit to reset (shown in error message)
+- Use `--limit` to reduce results per request
+- Enable caching: `twitter-cli config set cacheEnabled true`
+
+### "User not found"
+
+**Cause**: The Twitter account doesn't exist or is suspended.
+
+**Fix**: Double-check the username spelling.
+
+### "Network error"
+
+**Cause**: Cannot connect to Twitter API.
+
+**Fix**:
+- Check your internet connection
+- Check if Twitter API is experiencing issues: [Twitter API Status](https://api.twitterstat.us/)
+
+## CI/CD Usage
+
+### GitHub Actions
+
+```yaml
+name: Twitter Monitoring
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install Twitter CLI
+        run: npm install -g @eddieberklee/twitter-cli
+      
+      - name: Search tweets
+        env:
+          TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+        run: |
+          twitter-cli search "your query" --json > results.json
 ```
-~/.twitter-cli/config.json
+
+### Docker
+
+```dockerfile
+FROM node:18-alpine
+RUN npm install -g @eddieberklee/twitter-cli
+ENV TWITTER_BEARER_TOKEN=""
+ENTRYPOINT ["twitter-cli"]
 ```
 
-You can view it with:
 ```bash
-cat ~/.twitter-cli/config.json
+docker build -t twitter-cli .
+docker run -e TWITTER_BEARER_TOKEN="your-token" twitter-cli search "query"
 ```
 
-Or check your settings:
+## Security Best Practices
+
+1. **Never commit tokens** to version control
+2. **Use environment variables** in production
+3. **Rotate tokens** periodically
+4. **Use read-only tokens** when write access isn't needed
+5. **Store tokens securely** in secrets managers (AWS Secrets Manager, Vault, etc.)
+
+## Upgrading from Demo Mode
+
+Demo mode shows sample data without an API token. To start using real data:
+
 ```bash
-twitter-cli config
+# You'll see this message in demo mode:
+# 📋 DEMO MODE - No API credentials configured
+
+# Run setup to configure your token:
+twitter-cli setup
+```
+
+## Getting Help
+
+```bash
+# General help
+twitter-cli --help
+
+# Command-specific help
+twitter-cli search --help
+twitter-cli config --help
+twitter-cli setup --help
 ```
 
 ## Troubleshooting
 
-### "Demo Mode" still showing
-
-1. Check your token is set:
-   ```bash
-   twitter-cli config get TWITTER_BEARER_TOKEN
-   ```
-2. Make sure there are no extra spaces or quotes
-3. Try the environment variable method as a test:
-   ```bash
-   TWITTER_BEARER_TOKEN="your-token" twitter-cli search "test"
-   ```
-
-### "Unauthorized" or "401" errors
-
-- Your Bearer Token might be invalid or revoked
-- Go back to the Developer Portal and regenerate it
-- Make sure you're using the **Bearer Token**, not the API Key
-
-### "Rate limit exceeded"
-
-- Twitter limits requests to ~450 per 15-minute window
-- The CLI caches results for 5 minutes to help with this
-- Wait a few minutes and try again
-
-### "User not found" or "Tweet not found"
-
-- The account might be private or suspended
-- The tweet might have been deleted
-- Double-check the username/tweet ID
-
-### Connection errors
-
-- Check your internet connection
-- If behind a proxy, you may need to configure it:
-  ```bash
-  export HTTPS_PROXY="http://your-proxy:port"
-  ```
-
-## API Limits (Free Tier)
-
-Twitter's free tier includes:
-- **Tweet lookup**: 450 requests / 15 min
-- **User lookup**: 300 requests / 15 min  
-- **Search**: 180 requests / 15 min
-
-The CLI shows remaining quota after each request. Caching helps you stay under limits.
-
-## Next Steps
-
-Now that you're set up:
+### Reset Configuration
 
 ```bash
-# Search for popular tweets
-twitter-cli search "AI agents" --min-likes 100
+# Remove config file
+rm ~/.twitter-cli/config.json
 
-# Check out a user's timeline
-twitter-cli user elonmusk
+# Clear cache
+twitter-cli cache clear
 
-# Export data for analysis
-twitter-cli search "startup" --json > data.json
+# Start fresh
+twitter-cli setup
 ```
 
-See the [README](README.md) for full documentation.
+### Debug Mode
 
-## Security Notes
+```bash
+# Check token source and status
+twitter-cli config
 
-- Never commit your Bearer Token to git
-- Add `~/.twitter-cli/` to your global gitignore if needed
-- Rotate your token if you suspect it's been exposed
-- The CLI stores your token locally in `~/.twitter-cli/config.json`
+# Validate token manually
+twitter-cli config validate
+```
+
+---
+
+Still having issues? [Open an issue](https://github.com/eddieberklee/twitter-cli/issues) on GitHub.

@@ -56,20 +56,31 @@ twitter-cli search "startup" --json > results.json
 twitter-cli search "technology" --limit 5
 ```
 
-## Configuration
+## Setup
 
 To use with real Twitter data, you'll need a Twitter API Bearer Token.
 
-1. Get a token from the [Twitter Developer Portal](https://developer.twitter.com/en/portal/dashboard)
-2. Configure the CLI:
+```bash
+# Interactive setup wizard (recommended)
+twitter-cli setup
+```
+
+This will:
+1. Open the Twitter Developer Portal in your browser
+2. Guide you through getting a Bearer Token
+3. Validate and save your credentials
+
+### Alternative Setup Methods
 
 ```bash
-# Interactive setup
-twitter-cli config init
+# Set token directly with validation
+twitter-cli config set bearerToken "your-token-here" --validate
 
-# Or set directly
-twitter-cli config set TWITTER_BEARER_TOKEN "your-token-here"
+# Or use environment variable
+export TWITTER_BEARER_TOKEN="your-token-here"
 ```
+
+See [SETUP.md](SETUP.md) for detailed instructions and troubleshooting.
 
 ## Commands
 
@@ -124,6 +135,20 @@ Get the top replies to a tweet.
 twitter-cli replies 1234567890123456789
 ```
 
+### `setup`
+
+Interactive setup wizard for API credentials.
+
+```bash
+twitter-cli setup
+```
+
+**Options:**
+| Option | Description |
+|--------|-------------|
+| `--no-browser` | Don't open browser automatically |
+| `--skip-validation` | Skip token validation |
+
 ### `config`
 
 Manage CLI configuration.
@@ -132,20 +157,20 @@ Manage CLI configuration.
 # Show current config
 twitter-cli config
 
-# Interactive setup
-twitter-cli config init
-
 # Set a value
-twitter-cli config set TWITTER_BEARER_TOKEN "your-token"
+twitter-cli config set bearerToken "your-token" --validate
 
 # Get a value
 twitter-cli config get cacheEnabled
+
+# Validate current token
+twitter-cli config validate
 ```
 
 **Config options:**
-- `TWITTER_BEARER_TOKEN` - Your API token
+- `bearerToken` - Your API token
 - `cacheEnabled` - Enable/disable caching (default: true)
-- `cacheTtlMinutes` - Cache duration (default: 5)
+- `cacheTtlMinutes` - Cache duration (default: 15)
 - `defaultLimit` - Default result count (default: 10)
 
 ### `cache`
