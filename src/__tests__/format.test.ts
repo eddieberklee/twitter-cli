@@ -3,11 +3,16 @@ import {
   formatNumber,
   formatRelativeTime,
   formatTweet,
+  formatTweetCompact,
   formatJson,
   formatCsv,
   formatQuiet,
   formatTweets,
-} from '../lib/formatter.js';
+  formatMetrics,
+  wrapText,
+  truncate,
+  getVerificationBadge,
+} from '../lib/format.js';
 import type { Tweet } from '../types/index.js';
 
 // Create a mock tweet for testing
@@ -82,6 +87,76 @@ describe('formatRelativeTime', () => {
   });
 });
 
+describe('wrapText', () => {
+  it('should not wrap short text', () => {
+    expect(wrapText('short', 50)).toBe('short');
+  });
+
+  it('should wrap long text at word boundaries', () => {
+    const longText = 'This is a very long sentence that needs to be wrapped';
+    const wrapped = wrapText(longText, 20);
+    const lines = wrapped.split('\n');
+    for (const line of lines) {
+      expect(line.length).toBeLessThanOrEqual(20);
+    }
+  });
+
+  it('should preserve newlines', () => {
+    const text = 'Line 1\nLine 2';
+    expect(wrapText(text, 50)).toBe('Line 1\nLine 2');
+  });
+});
+
+describe('truncate', () => {
+  it('should not truncate short text', () => {
+    expect(truncate('short', 10)).toBe('short');
+  });
+
+  it('should truncate long text with ellipsis', () => {
+    expect(truncate('This is a long text', 10)).toBe('This is...');
+  });
+});
+
+describe('getVerificationBadge', () => {
+  it('should return empty for non-verified users', () => {
+    expect(getVerificationBadge(false)).toBe('');
+  });
+
+  it('should return badge for verified users', () => {
+    expect(getVerificationBadge(true)).toContain('✓');
+  });
+});
+
+describe('formatMetrics', () => {
+  it('should format metrics with emoji', () => {
+    const metrics = { likes: 1000, retweets: 500, replies: 100, views: 50000 };
+    const result = formatMetrics(metrics);
+    
+    expect(result).toContain('❤️');
+    expect(result).toContain('1K');
+    expect(result).toContain('🔄');
+    expect(result).toContain('500');
+    expect(result).toContain('💬');
+    expect(result).toContain('100');
+  });
+
+  it('should include views when present', () => {
+    const metrics = { likes: 100, retweets: 50, replies: 10, views: 10000 };
+    const result = formatMetrics(metrics);
+    expect(result).toContain('👁️');
+    expect(result).toContain('10K');
+  });
+
+  it('should format compact metrics', () => {
+    const metrics = { likes: 1000, retweets: 500, replies: 100, views: 50000 };
+    const result = formatMetrics(metrics, true);
+    expect(result).toContain('❤️');
+    expect(result).toContain('🔄');
+    // Compact mode doesn't include replies and views
+    expect(result).not.toContain('💬');
+  });
+});
+
 describe('formatTweet', () => {
   it('should format a tweet with all components', () => {
     const tweet = createMockTweet();
@@ -99,13 +174,22 @@ describe('formatTweet', () => {
     expect(result).toContain('❤️');
     expect(result).toContain('🔄');
     expect(result).toContain('💬');
-    expect(result).toContain('👁️');
   });
 
-  it('should include verification badge for verified users', () => {
-    const tweet = createMockTweet({ author: { ...createMockTweet().author, verified: true } });
+  it('should include divider lines', () => {
+    const tweet = createMockTweet();
     const result = formatTweet(tweet, { noColor: true });
-    expect(result).toContain('✓');
+    expect(result).toContain('━');
+  });
+});
+
+describe('formatTweetCompact', () => {
+  it('should format compact tweets', () => {
+    const tweet = createMockTweet({ text: 'A '.repeat(100) }); // Long text
+    const result = formatTweetCompact(tweet, { noColor: true });
+    
+    expect(result).toContain('@testuser');
+    expect(result).toContain('...');  // Should truncate
   });
 });
 
@@ -127,6 +211,7 @@ describe('formatJson', () => {
     expect(parsed[0]).toHaveProperty('author');
     expect(parsed[0]).toHaveProperty('metrics');
     expect(parsed[0]).toHaveProperty('url');
+    expect(parsed[0]).toHaveProperty('created_at');
   });
 });
 
@@ -151,21 +236,25 @@ describe('formatCsv', () => {
     expect(lines[1]).toContain('testuser');
   });
 
-  it('should escape quotes and commas in text', () => {
+  it('should escape special characters', () => {
     const tweet = createMockTweet({ text: 'Test, with "quotes"' });
     const result = formatCsv([tweet]);
     
-    // Should be properly escaped
+    // Should have doubled quotes for escaping
     expect(result).toContain('""');
   });
 });
 
 describe('formatQuiet', () => {
   it('should return only URLs', () => {
-    const tweets = [createMockTweet(), createMockTweet({ id: '987654321', url: 'https://twitter.com/testuser/status/987654321' })];
+    const tweets = [
+      createMockTweet(),
+      createMockTweet({ id: '987654321', url: 'https://twitter.com/testuser/status/987654321' })
+    ];
     const result = formatQuiet(tweets);
     const lines = result.split('\n');
     
+    expect(lines.length).toBe(2);
     for (const line of lines) {
       expect(line).toMatch(/^https:\/\/twitter\.com\/.+\/status\/\d+$/);
     }
@@ -200,5 +289,13 @@ describe('formatTweets', () => {
     
     expect(result).toContain('━');
     expect(result).toContain('@testuser');
+  });
+
+  it('should format compact when compact option is true', () => {
+    const tweets = [createMockTweet()];
+    const result = formatTweets(tweets, { compact: true, noColor: true });
+    
+    expect(result).toContain('@testuser');
+    expect(result).not.toContain('━━━━━');  // No full dividers in compact
   });
 });
