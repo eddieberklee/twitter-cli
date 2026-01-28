@@ -1,0 +1,129 @@
+# Error Handling Examples
+# Twitter CLI provides friendly error messages with suggestions
+
+---
+
+# Invalid Tweet ID
+
+$ twitter-cli replies abc123
+
+✗ Invalid tweet ID or URL
+
+Expected formats:
+  • Numeric ID: 1234567890123456789
+  • Twitter URL: https://twitter.com/user/status/1234567890123456789
+  • X URL: https://x.com/user/status/1234567890123456789
+
+---
+
+# User Not Found
+
+$ twitter-cli user nonexistentuser12345
+
+✗ User @nonexistentuser12345 not found
+
+Double-check the username and try again.
+Note: The username is case-insensitive.
+
+---
+
+# Invalid Username Format
+
+$ twitter-cli user "user with spaces"
+
+✗ Invalid username format
+
+Twitter usernames:
+  • Are 1-15 characters long
+  • Contain only letters, numbers, and underscores
+  • Do not contain spaces or special characters
+
+---
+
+# Rate Limit Exceeded
+
+$ twitter-cli search "popular topic"
+
+✗ Twitter API rate limit exceeded
+
+Suggestions:
+  • Wait 15 minutes for the rate limit to reset
+  • Use cached results if available
+  • Reduce the --limit to fetch fewer tweets
+
+---
+
+# Rate Limit Warning (low remaining)
+
+$ twitter-cli search "AI" -n 50
+
+🔍 Search: "AI"
+Found 50 tweets
+
+[... tweet output ...]
+
+⚠ Rate limit low: 5/180 requests remaining
+  Resets in 8m 32s
+
+---
+
+# Authentication Error
+
+$ twitter-cli search "test"
+
+✗ Authentication failed
+
+Your API token may be invalid or expired.
+Run `twitter-cli config init` to set up a new token.
+
+---
+
+# Network Error
+
+$ twitter-cli search "test"
+
+✗ Network error: Unable to connect to Twitter
+
+Check your internet connection and try again.
+
+---
+
+# No Results Found
+
+$ twitter-cli search "xyzabcnonexistent12345"
+
+ℹ No tweets found matching your query.
+
+Suggestions:
+  • Try a broader search term
+  • Remove or adjust filters (--min-likes, --verified)
+  • Expand the time range (--time 7d)
+
+---
+
+# Protected/Suspended Account
+
+$ twitter-cli user suspended_account
+
+✗ Cannot access @suspended_account
+
+This account may be suspended or protected.
+
+---
+
+# Color-coded output:
+
+  ✓ Green    - Success messages
+  ✗ Red      - Error messages
+  ⚠ Yellow   - Warning messages
+  ℹ Blue     - Info messages
+  (dim)      - Hints and suggestions
+
+---
+
+# Disable colors for scripts:
+
+$ twitter-cli search "AI" --no-color
+
+# Or set environment variable:
+$ NO_COLOR=1 twitter-cli search "AI"

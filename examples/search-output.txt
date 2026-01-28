@@ -1,0 +1,116 @@
+$ twitter-cli search "AI agents"
+
+📋 DEMO MODE
+No API credentials configured. Showing sample data.
+Run `twitter-cli config init` to set up your Twitter API token.
+
+🔍 Search: "AI agents"
+Found 5 tweets
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@elonmusk ✓ • 2h ago
+────────────────────────────────────────────────────────
+Working on something new. Can't share details yet but
+it's going to be transformative — AI agents.
+
+❤️  54K     🔄 8.2K    💬 4.1K    👁️  3.5M
+
+🔗 https://twitter.com/elonmusk/status/1234567890123456789
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@sama ✓ • 5h ago
+────────────────────────────────────────────────────────
+AI agents are going to change everything. The next
+generation of software will be autonomous and
+self-improving — AI agents.
+
+❤️  45.2K   🔄 12.1K   💬 3.4K    👁️  2.1M
+
+🔗 https://twitter.com/sama/status/1234567890123456790
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@karpathy ✓ • 1d ago
+────────────────────────────────────────────────────────
+The best time to start building was yesterday. The
+second best time is now. Stop planning, start doing.
+
+❤️  32.1K   🔄 8.9K    💬 1.2K    👁️  1.8M
+
+🔗 https://twitter.com/karpathy/status/1234567890123456791
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@naval ✓ • 2d ago
+────────────────────────────────────────────────────────
+Open source is eating the world. The best software is
+built in public by passionate communities.
+
+❤️  21.4K   🔄 5.6K    💬 980     👁️  1.2M
+
+🔗 https://twitter.com/naval/status/1234567890123456792
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@paulg ✓ • 3d ago
+────────────────────────────────────────────────────────
+Just shipped a major update. The feedback loop between
+building and learning is everything.
+
+❤️  18.5K   🔄 2.3K    💬 890     👁️  650K
+
+🔗 https://twitter.com/paulg/status/1234567890123456793
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+---
+
+# Compact format with -c flag:
+
+$ twitter-cli search "AI agents" -c
+
+@elonmusk ✓ (2h ago) ❤️ 54K  🔄 8.2K
+  Working on something new. Can't share details yet but it's going to be...
+  https://twitter.com/elonmusk/status/1234567890123456789
+
+@sama ✓ (5h ago) ❤️ 45.2K  🔄 12.1K
+  AI agents are going to change everything. The next generation of softwar...
+  https://twitter.com/sama/status/1234567890123456790
+
+---
+
+# JSON output with --json flag:
+
+$ twitter-cli search "AI agents" --json
+
+[
+  {
+    "id": "1234567890123456789",
+    "text": "AI agents are going to change everything...",
+    "author": {
+      "username": "sama",
+      "name": "Sam Altman",
+      "verified": true
+    },
+    "metrics": {
+      "likes": 45200,
+      "retweets": 12100,
+      "replies": 3400,
+      "views": 2100000
+    },
+    "created_at": "2024-01-28T12:00:00.000Z",
+    "url": "https://twitter.com/sama/status/1234567890123456789"
+  }
+]
+
+---
+
+# Quiet mode with -q flag (just URLs):
+
+$ twitter-cli search "AI agents" -q
+
+https://twitter.com/elonmusk/status/1234567890123456789
+https://twitter.com/sama/status/1234567890123456790
+https://twitter.com/karpathy/status/1234567890123456791
+https://twitter.com/naval/status/1234567890123456792
+https://twitter.com/paulg/status/1234567890123456793
